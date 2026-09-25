@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#06101d" />
+  <title>SafeRoute — Women's Safety Navigation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+
+<body>
+
+<!-- =========================================================
+     BACKEND CONNECTIVITY BANNER
+     Hidden by default. Shown by live_map_route.js when the FastAPI
+     backend can't be reached, so the problem is obvious immediately
+     instead of only surfacing as "Failed to fetch" after a click.
+========================================================= -->
+<div id="backendStatusBanner" class="backend-status-banner hidden">
+  ⚠️ Backend not reachable at <code id="backendApiUrl"></code>.
+  Start it with <code>python -m uvicorn backend:app --reload --port 8000</code>, then reload this page.
+</div>
+
+<!-- =========================================================
+     LOGIN / ACCOUNT SCREEN
+========================================================= -->
+
+<div id="authScreen" class="auth-screen">
+
+  <div class="auth-background auth-bg-one"></div>
+  <div class="auth-background auth-bg-two"></div>
+
+  <div class="auth-wrapper">
+
+    <div class="auth-brand">
+      <div class="brand-mark auth-mark">
+        <span class="brand-shield">◆</span>
+      </div>
+
+      <div>
+        <strong>Safe<span>Route</span></strong>
+        <small data-i18n="tagline">Safety-first navigation</small>
+      </div>
+    </div>
+
+    <div class="auth-language">
+      <label for="authLanguage">🌐</label>
+      <select id="authLanguage">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+    </div>
+
+    <div class="auth-card">
+
+      <div class="auth-header">
+        <div class="auth-welcome-row">
+          <span class="mini-label" data-i18n="welcomeBack">WELCOME TO SAFEROUTE</span>
+          <span class="auth-secure-pill">🔒 Secure & private</span>
+        </div>
+
+        <h1 id="authTitle" data-i18n="loginTitle">
+          Travel smarter.<br>
+          Travel safer.
+        </h1>
+
+        <p id="authSubtitle" data-i18n="loginSubtitle">
+          Sign in to plan safer journeys and keep your safety history in one place.
+        </p>
+      </div>
+
+      <!-- LOGIN -->
+
+      <form id="loginForm" class="auth-form">
+
+        <label>
+          <span data-i18n="emailPhone">Email or phone number</span>
+
+          <input
+            type="text"
+            id="loginIdentifier"
+            autocomplete="username"
+            placeholder="Enter email or phone number"
+          />
+
+          <small class="field-error" id="loginIdentifierError"></small>
+        </label>
+
+        <label>
+          <span data-i18n="password">Password</span>
+
+          <div class="password-field">
+            <input
+              type="password"
+              id="loginPassword"
+              autocomplete="current-password"
+              placeholder="Enter password"
+            />
+
+            <button
+              type="button"
+              class="password-toggle"
+              data-password="loginPassword"
+            >
+              👁
+            </button>
+          </div>
+
+          <small class="field-error" id="loginPasswordError"></small>
+        </label>
+
+        <div class="auth-row">
+
+          <label class="remember-option">
+            <input type="checkbox" id="rememberMe">
+            <span data-i18n="remember">Remember me</span>
+          </label>
+
+          <button
+            type="button"
+            class="link-btn"
+            id="forgotPasswordBtn"
+            data-i18n="forgotPassword"
+          >
+            Forgot password?
+          </button>
+
+        </div>
+
+        <button class="auth-primary" type="submit">
+          <span data-i18n="login">Log in</span>
+          <span>→</span>
+        </button>
+
+      </form>
+
+      <!-- CREATE ACCOUNT -->
+
+      <form id="signupForm" class="auth-form hidden">
+
+        <label>
+          <span data-i18n="fullName">Full name</span>
+
+          <input
+            type="text"
+            id="signupName"
+            placeholder="Enter your name"
+            autocomplete="name"
+          />
+
+          <small class="field-error" id="signupNameError"></small>
+        </label>
+
+        <label>
+          <span data-i18n="emailPhone">Email or phone number</span>
+
+          <input
+            type="text"
+            id="signupIdentifier"
+            placeholder="Enter email or phone number"
+            autocomplete="username"
+          />
+
+          <small class="field-error" id="signupIdentifierError"></small>
+        </label>
+
+        <label>
+          <span data-i18n="password">Password</span>
+
+          <div class="password-field">
+            <input
+              type="password"
+              id="signupPassword"
+              placeholder="Create a password"
+              autocomplete="new-password"
+            />
+
+            <button
+              type="button"
+              class="password-toggle"
+              data-password="signupPassword"
+            >
+              👁
+            </button>
+          </div>
+
+          <small class="field-error" id="signupPasswordError"></small>
+        </label>
+
+        <label>
+          <span data-i18n="confirmPassword">Confirm password</span>
+
+          <input
+            type="password"
+            id="signupConfirmPassword"
+            placeholder="Confirm your password"
+            autocomplete="new-password"
+          />
+
+          <small class="field-error" id="signupConfirmError"></small>
+        </label>
+
+        <button class="auth-primary" type="submit">
+          <span data-i18n="createAccount">Create account</span>
+          <span>→</span>
+        </button>
+
+      </form>
+
+      <!-- RESET PASSWORD -->
+
+      <form id="forgotForm" class="auth-form hidden">
+
+        <div class="auth-step" id="forgotStepOne">
+
+          <label>
+            <span data-i18n="emailPhone">Email or phone number</span>
+
+            <input
+              type="text"
+              id="forgotIdentifier"
+              placeholder="Enter registered email or phone"
+            />
+
+            <small class="field-error" id="forgotIdentifierError"></small>
+          </label>
+
+          <button class="auth-primary" type="submit">
+            <span data-i18n="sendCode">Send verification code</span>
+            <span>→</span>
+          </button>
+
+        </div>
+
+        <div class="auth-step hidden" id="forgotStepTwo">
+
+          <div class="verification-box">
+
+            <span>✓</span>
+
+            <p id="verificationMessage">
+              Verification code sent.
+            </p>
+
+          </div>
+
+          <label>
+            <span data-i18n="verificationCode">Verification code</span>
+
+            <div class="code-inputs">
+              <input maxlength="1" inputmode="numeric">
+              <input maxlength="1" inputmode="numeric">
+              <input maxlength="1" inputmode="numeric">
+              <input maxlength="1" inputmode="numeric">
+              <input maxlength="1" inputmode="numeric">
+              <input maxlength="1" inputmode="numeric">
+            </div>
+          </label>
+
+          <label>
+            <span data-i18n="newPassword">New password</span>
+
+            <input
+              type="password"
+              id="newPassword"
+              placeholder="Create a new password"
+            />
+          </label>
+
+          <button
+            class="auth-primary"
+            type="button"
+            id="resetPasswordBtn"
+          >
+            <span data-i18n="resetPassword">Reset password</span>
+            <span>→</span>
+          </button>
+
+          <div class="resend-row">
+            <button
+              type="button"
+              class="link-btn centered-link"
+              id="resendCodeBtn"
+              data-i18n="resendCode"
+            >
+              Resend code
+            </button>
+            <span id="resendTimer" class="resend-timer"></span>
+          </div>
+
+          <button type="button" class="auth-back-btn" id="backToLoginBtn">← <span data-i18n="backToLogin">Back to login</span></button>
+
+        </div>
+
+      </form>
+
+      <div class="auth-divider">
+        <span data-i18n="or">OR</span>
+      </div>
+
+      <div class="auth-switch">
+
+        <span id="authSwitchText" data-i18n="noAccount">
+          Don't have an account?
+        </span>
+
+        <button
+          type="button"
+          class="link-btn"
+          id="authSwitchBtn"
+          data-i18n="createAccount"
+        >
+          Create account
+        </button>
+
+      </div>
+
+      <div class="auth-benefits">
+        <span>🛡️ Safety-first</span>
+        <span>📍 Smart routes</span>
+        <span>📊 Your stats</span>
+      </div>
+
+      <div class="auth-demo-note">
+        <span>●</span>
+        <span data-i18n="prototypeAuth">
+          Frontend prototype authentication
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- =========================================================
+     MAIN APPLICATION
+========================================================= -->
+
+<div id="app" class="app-shell hidden">
+
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+
+  <!-- HEADER -->
+
+  <header class="topbar">
+
+    <a class="brand" href="#planner">
+
+      <span class="brand-mark">
+        <span class="brand-shield">◆</span>
+        <span class="brand-pulse"></span>
+      </span>
+
+      <span>
+        <strong>Safe<span>Route</span></strong>
+        <small data-i18n="tagline">Safety-first navigation</small>
+      </span>
+
+    </a>
+
+    <nav class="topnav" aria-label="Main navigation">
+
+      <button
+        class="nav-link active"
+        data-scroll="planner"
+        data-i18n="planRoute"
+      >
+        Plan Route
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="maps"
+        data-i18n="maps"
+      >
+        Maps
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="dashboard"
+        data-i18n="safetyDashboard"
+      >
+        Safety Dashboard
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="history"
+        data-i18n="myHistory"
+      >
+        My History
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="report"
+        data-i18n="reportIncident"
+      >
+        Report Incident
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="about"
+        data-i18n="aboutSafeRoute"
+      >
+        About SafeRoute
+      </button>
+
+      <button
+        class="nav-link"
+        data-scroll="account"
+        data-i18n="myAccount"
+      >
+        My Account
+      </button>
+
+    </nav>
+
+    <div class="header-actions">
+
+      <button
+        class="sos-btn"
+        id="sosBtn"
+        title="Emergency SOS"
+      >
+        <span class="sos-icon">🚨</span>
+        <span data-i18n="sos">SOS</span>
+      </button>
+
+      <button
+        class="theme-btn"
+        id="themeBtn"
+        title="Toggle theme"
+      >
+        ☾
+      </button>
+
+      <button
+        class="language-btn"
+        id="siteLanguageBtn"
+        title="Language"
+      >
+        EN
+      </button>
+
+      <button
+        class="profile-btn"
+        id="profileBtn"
+        aria-label="Open profile"
+      >
+        <span class="avatar" id="profileAvatar">K</span>
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main>
+
+    <!-- =====================================================
+         HERO + ROUTE PLANNER
+    ====================================================== -->
+
+    <section class="hero" id="planner" data-page="planner">
+
+      <div class="hero-copy">
+
+        <div class="eyebrow">
+          <span></span>
+          <span data-i18n="systemName">
+            WOMEN'S SAFETY ROUTE RECOMMENDATION SYSTEM
+          </span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="hero-line hero-line-1" data-i18n="heroLine1">Don't just find</span>
+          <span class="hero-line hero-line-2"><em data-i18n="heroLine2">the shortest way.</em></span>
+          <span class="hero-line hero-line-3" data-i18n="heroLine3">Find the safer way.</span>
+        </h1>
+
+        <p class="hero-text" data-i18n="heroDescription">
+          SafeRoute combines lighting, crowd density, reported incidents,
+          emergency access, distance and travel time to recommend a safer
+          practical route.
+        </p>
+
+        <div class="hero-proof">
+
+          <span>
+            <b>04</b>
+            <span data-i18n="safetySignals">safety signals</span>
+          </span>
+
+          <i></i>
+
+          <span>
+            <b>01</b>
+            <span data-i18n="explainableScore">explainable score</span>
+          </span>
+
+          <i></i>
+
+          <span>
+            <b>∞</b>
+            <span data-i18n="adaptableCities">adaptable cities</span>
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- ROUTE PLANNER -->
+
+      <div class="planner-card glass">
+
+        <div class="card-heading">
+
+          <div>
+            <span class="mini-label" data-i18n="routePlanner">
+              ROUTE PLANNER
+            </span>
+
+            <h2 data-i18n="whereGoing">
+              Where are you going?
+            </h2>
+          </div>
+
+          <button
+            class="round-btn"
+            id="swapBtn"
+            title="Swap locations"
+          >
+            ⇅
+          </button>
+
+        </div>
+
+
+        <!-- START -->
+
+        <div class="location-stack">
+
+          <div class="location-field">
+
+            <span class="field-icon origin">●</span>
+
+            <div class="field-content">
+
+              <label for="fromInput" data-i18n="startingPoint">
+                STARTING POINT
+              </label>
+
+              <input
+                id="fromInput"
+                value=""
+                placeholder="Enter starting point"
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-controls="fromSuggestions"
+              />
+              <div id="fromSuggestions" class="location-autocomplete" role="listbox"></div>
+
+            </div>
+
+            <button
+              class="field-action current-location-btn"
+              id="locateBtn"
+              title="Use current location"
+            >
+              ⌖
+            </button>
+
+          </div>
+
+          <div class="connector-line"></div>
+
+          <!-- DESTINATION -->
+
+          <div class="location-field">
+
+            <span class="field-icon destination">◆</span>
+
+            <div class="field-content">
+
+              <label for="toInput" data-i18n="destination">
+                DESTINATION
+              </label>
+
+              <input
+                id="toInput"
+                placeholder="Enter destination"
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-controls="toSuggestions"
+              />
+              <div id="toSuggestions" class="location-autocomplete" role="listbox"></div>
+
+            </div>
+
+            <button
+              class="field-action"
+              id="clearDestination"
+            >
+              ×
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- QUICK DESTINATIONS -->
+
+        <div class="quick-destinations">
+
+          <button data-destination="Metro Station">🚇 Metro</button>
+          <button data-destination="College Campus">🏫 College</button>
+          <button data-destination="Home">⌂ Home</button>
+          <button data-destination="Hospital">✚ Hospital</button>
+
+        </div>
+
+
+        <!-- TRAVEL MODE -->
+
+        <div class="planner-input-section">
+
+          <label class="planner-label" data-i18n="travellingBy">
+            HOW ARE YOU TRAVELLING?
+          </label>
+
+          <div class="choice-grid travel-mode">
+
+            <button class="choice-btn active" data-mode="walk">
+              <span class="mode-emoji">🚶</span>
+              <span data-i18n="walk">Walk</span>
+            </button>
+
+            <button class="choice-btn" data-mode="cycle">
+              <span class="mode-emoji">🚲</span>
+              <span data-i18n="cycle">Cycle</span>
+            </button>
+
+            <button class="choice-btn" data-mode="bus">
+              <span class="mode-emoji">🚌</span>
+              <span data-i18n="bus">Bus</span>
+            </button>
+
+            <button class="choice-btn" data-mode="car">
+              <span class="mode-emoji">🚗</span>
+              <span data-i18n="car">Car</span>
+            </button>
+
+            <button class="choice-btn" data-mode="auto">
+              <span class="mode-emoji">🛺</span>
+              <span data-i18n="auto">Auto</span>
+            </button>
+
+            <button class="choice-btn" data-mode="bike">
+              <span class="mode-emoji">🏍️</span>
+              <span data-i18n="bike">Bike</span>
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="planner-input-section">
+
+          <label class="planner-label" data-i18n="mattersMost">
+            WHAT MATTERS MOST?
+          </label>
+
+          <div class="priority-options">
+
+            <button
+              class="priority-btn active"
+              data-priority="safety"
+            >
+              <strong>🛡</strong>
+              <span>
+                <b data-i18n="safety">Safety</b>
+                <small data-i18n="maximumSafety">
+                  Maximum safety
+                </small>
+              </span>
+            </button>
+
+            <button
+              class="priority-btn"
+              data-priority="fastest"
+            >
+              <strong>⚡</strong>
+              <span>
+                <b data-i18n="fastest">Fastest</b>
+                <small data-i18n="minimumTime">
+                  Minimum travel time
+                </small>
+              </span>
+            </button>
+
+            <button
+              class="priority-btn"
+              data-priority="balanced"
+            >
+              <strong>⚖</strong>
+              <span>
+                <b data-i18n="balanced">Balanced</b>
+                <small data-i18n="safetyTime">
+                  Safety + time
+                </small>
+              </span>
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- ADDITIONAL PREFERENCES -->
+
+        <div class="planner-input-section">
+
+          <label class="planner-label" data-i18n="preferences">
+            ADDITIONAL PREFERENCES
+          </label>
+
+          <div class="preference-options">
+
+            <label>
+              <input type="checkbox" value="lighting" checked>
+              <span data-i18n="wellLit">Prefer well-lit roads</span>
+            </label>
+
+            <label>
+              <input type="checkbox" value="crowd">
+              <span data-i18n="crowded">Prefer active/crowded areas</span>
+            </label>
+
+            <label>
+              <input type="checkbox" value="emergency">
+              <span data-i18n="emergencyAccess">Stay near emergency facilities</span>
+            </label>
+
+            <label>
+              <input type="checkbox" value="mainRoad">
+              <span data-i18n="mainRoads">Prefer main roads</span>
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- DATE / TIME -->
+
+        <div class="date-time-grid">
+
+          <label>
+
+            <span data-i18n="travelDate">
+              TRAVEL DATE
+            </span>
+
+            <input
+              type="date"
+              id="travelDate"
+            />
+
+          </label>
+
+          <label>
+
+            <span data-i18n="departureTime">
+              DEPARTURE TIME
+            </span>
+
+            <input
+              type="time"
+              id="departureTime"
+            />
+
+          </label>
+
+        </div>
+
+
+        <button
+          class="primary-btn"
+          id="findRouteBtn"
+        >
+
+          <span data-i18n="findBestRoutes">
+            Find best routes
+          </span>
+
+          <span class="btn-arrow">→</span>
+
+        </button>
+
+        <p class="demo-note" data-i18n="prototypeNote">
+          Prototype route engine · connect real map and safety datasets for deployment
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAP SECTION
+    ====================================================== -->
+
+    <section class="results-section" id="maps" data-page="maps">
+
+      <div class="section-topline">
+
+        <div>
+
+          <span class="mini-label" data-i18n="routeComparison">
+            ROUTE COMPARISON
+          </span>
+
+          <h2 data-i18n="chooseConfidence">
+            Choose with confidence.
+          </h2>
+
+          <p id="resultSubtitle">
+            Enter your destination and journey details to compare routes.
+          </p>
+
+        </div>
+
+        <button
+          class="text-btn"
+          id="recenterBtn"
+        >
+          ◎ <span data-i18n="recenter">Recenter view</span>
+        </button>
+
+      </div>
+
+
+      <div class="results-grid">
+
+        <!-- MAP -->
+
+        <div class="map-card glass">
+
+          <div class="map-toolbar">
+
+            <div class="map-status">
+              <span class="live-dot"></span>
+              <span data-i18n="safetyLayerActive">
+                Safety layer active
+              </span>
+            </div>
+
+            <div class="map-tools">
+
+              <button data-map="risk" class="map-tool active">
+                Risk
+              </button>
+
+              <button data-map="lighting" class="map-tool">
+                Lighting
+              </button>
+
+              <button data-map="crowd" class="map-tool">
+                Crowd
+              </button>
+
+              <button data-map="incidents" class="map-tool">
+                Incidents
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="fake-map"
+            id="fakeMap"
+          >
+
+            <div class="map-grid"></div>
+            <div class="map-river"></div>
+
+            <div class="road road-a"></div>
+            <div class="road road-b"></div>
+            <div class="road road-c"></div>
+            <div class="road road-d"></div>
+            <div class="road road-e"></div>
+            <div class="road road-f"></div>
+
+            <div class="map-place place-1">START</div>
+            <div class="map-place place-2">MARKET</div>
+            <div class="map-place place-3">CAMPUS</div>
+            <div class="map-place place-4">DESTINATION</div>
+
+            <svg
+              class="route-svg"
+              viewBox="0 0 900 520"
+              preserveAspectRatio="none"
+            >
+
+              <defs>
+
+                <filter id="routeGlow">
+                  <feGaussianBlur
+                    stdDeviation="7"
+                    result="blur"
+                  />
+
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+
+                </filter>
+
+              </defs>
+
+              <path
+                id="routeAlt"
+                d="M110 405 C190 340 190 180 315 205 C420 228 430 330 540 290 C660 246 685 180 790 125"
+              />
+
+              <path
+                id="routeMain"
+                d="M110 405 C190 360 235 390 300 330 C375 260 410 180 510 210 C610 240 650 130 790 125"
+                filter="url(#routeGlow)"
+              />
+
+              <path
+                id="routeFast"
+                d="M110 405 C230 430 330 370 430 315 C560 245 590 230 790 125"
+              />
+
+            </svg>
+
+
+            <div class="map-marker start-marker">
+
+              <span>●</span>
+              <b id="mapStartLabel">START</b>
+
+            </div>
+
+            <div class="map-marker dest-marker">
+
+              <span>◆</span>
+              <b id="mapDestinationLabel">DESTINATION</b>
+
+            </div>
+
+
+            <button
+              class="map-pin pin-1"
+              data-pin="Strong street lighting in this area"
+            >
+              ☼
+            </button>
+
+            <button
+              class="map-pin pin-2"
+              data-pin="Emergency facility nearby"
+            >
+              ✚
+            </button>
+
+            <button
+              class="map-pin pin-3"
+              data-pin="Reported incident cluster"
+            >
+              !
+            </button>
+
+            <button
+              class="map-pin pin-4"
+              data-pin="High crowd density"
+            >
+              ♟
+            </button>
+
+
+            <div
+              class="map-tooltip"
+              id="mapTooltip"
+            ></div>
+
+
+            <div class="map-legend">
+
+              <span>
+                <i class="legend-safe"></i>
+                Lower risk
+              </span>
+
+              <span>
+                <i class="legend-mid"></i>
+                Moderate
+              </span>
+
+              <span>
+                <i class="legend-high"></i>
+                Higher risk
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ROUTE PANEL -->
+
+        <aside class="route-panel">
+
+          <div class="route-summary glass">
+
+            <div
+              class="score-ring"
+              id="mainScoreRing"
+            >
+
+              <div>
+                <strong id="mainScore">86</strong>
+                <span>/100</span>
+              </div>
+
+            </div>
+
+            <div class="summary-copy">
+
+              <span class="safe-pill">
+                <span data-i18n="recommended">RECOMMENDED</span>
+              </span>
+
+              <h3 id="mainRouteName">
+                Safer practical route
+              </h3>
+
+              <p>
+                <span id="mainDistance">3.8 km</span>
+                ·
+                <span id="mainTime">14 min</span>
+              </p>
+
+              <small id="mainRouteReason">
+                Safety is prioritized without ignoring practicality.
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <!-- FACTORS -->
+
+          <div class="factor-card glass">
+
+            <div class="factor-head">
+
+              <div>
+
+                <span
+                  class="mini-label"
+                  data-i18n="safetyBreakdown"
+                >
+                  SAFETY BREAKDOWN
+                </span>
+
+                <h3 data-i18n="whyRoute">
+                  Why this route?
+                </h3>
+
+              </div>
+
+              <button
+                class="small-btn"
+                id="weightsBtn"
+              >
+                Weights
+              </button>
+
+            </div>
+
+            <div
+              id="factorList"
+              class="factor-list"
+            ></div>
+
+          </div>
+
+
+          <!-- ROUTES -->
+
+          <div class="alternatives">
+
+            <div class="alt-head">
+
+              <span
+                class="mini-label"
+                data-i18n="recommendedRoutes"
+              >
+                RECOMMENDED ROUTES
+              </span>
+
+              <span id="routeCount">
+                3 routes
+              </span>
+
+            </div>
+
+            <div id="routeCards"></div>
+
+          </div>
+
+        </aside>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SAFETY DASHBOARD
+    ====================================================== -->
+
+    <section
+      class="dashboard-section"
+      id="dashboard" data-page="dashboard"
+    >
+
+      <div class="section-topline centered">
+
+        <span
+          class="mini-label"
+          data-i18n="safetyDashboard"
+        >
+          SAFETY DASHBOARD
+        </span>
+
+        <h2 data-i18n="safetyIntelligence">
+          Understand the safety around you.
+        </h2>
+
+        <p data-i18n="dashboardDescription">
+          SafeRoute combines multiple signals to create an explainable picture of route safety.
+        </p>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <div class="dashboard-stat glass">
+
+          <span class="dashboard-icon">🛡</span>
+
+          <small data-i18n="averageSafety">
+            AVERAGE SAFETY SCORE
+          </small>
+
+          <strong>82<span>/100</span></strong>
+
+          <div class="dashboard-change">
+            ↑ 6% this week
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-stat glass">
+
+          <span class="dashboard-icon">☼</span>
+
+          <small data-i18n="lightingCoverage">
+            LIGHTING COVERAGE
+          </small>
+
+          <strong>88<span>%</span></strong>
+
+          <div class="dashboard-progress">
+            <i style="width:88%"></i>
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-stat glass">
+
+          <span class="dashboard-icon">♟</span>
+
+          <small data-i18n="crowdActivity">
+            CROWD ACTIVITY
+          </small>
+
+          <strong>71<span>%</span></strong>
+
+          <div class="dashboard-progress">
+            <i style="width:71%"></i>
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-stat glass">
+
+          <span class="dashboard-icon emergency">✚</span>
+
+          <small data-i18n="emergencyActivity">
+            EMERGENCY ACCESS
+          </small>
+
+          <strong>91<span>%</span></strong>
+
+          <div class="dashboard-progress">
+            <i style="width:91%"></i>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- HOW SAFETY IS CALCULATED -->
+
+      <div class="calculation-card glass">
+
+        <div class="calculation-copy">
+
+          <span
+            class="mini-label"
+            data-i18n="howSafetyCalculated"
+          >
+            HOW SAFETY IS CALCULATED
+          </span>
+
+          <h2 data-i18n="weightedSignals">
+            Every route gets a weighted safety score.
+          </h2>
+
+          <p data-i18n="calculationDescription">
+            Road segments are evaluated using multiple signals instead of distance alone.
+            The weights can be adjusted depending on the user's priorities.
+          </p>
+
+        </div>
+
+
+        <div class="calculation-list">
+
+          <div class="calculation-row">
+            <span>☼</span>
+            <div>
+              <b data-i18n="lighting">Lighting</b>
+              <small>30%</small>
+            </div>
+            <strong>88</strong>
+          </div>
+
+          <div class="calculation-row">
+            <span>♟</span>
+            <div>
+              <b data-i18n="crowdDensity">Crowd density</b>
+              <small>25%</small>
+            </div>
+            <strong>71</strong>
+          </div>
+
+          <div class="calculation-row">
+            <span>!</span>
+            <div>
+              <b data-i18n="incidentRisk">Incident safety</b>
+              <small>30%</small>
+            </div>
+            <strong>76</strong>
+          </div>
+
+          <div class="calculation-row">
+            <span>✚</span>
+            <div>
+              <b data-i18n="emergencyAccess">Emergency access</b>
+              <small>15%</small>
+            </div>
+            <strong>91</strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TIME BASED ACTIVITY -->
+
+      <div class="time-risk-card glass">
+
+        <div>
+
+          <span
+            class="mini-label"
+            data-i18n="timeBasedActivity"
+          >
+            TIME-BASED ACTIVITY
+          </span>
+
+          <h2 data-i18n="riskChanges">
+            Risk can change with time.
+          </h2>
+
+        </div>
+
+
+        <div class="time-risk-grid">
+
+          <div class="time-card low">
+
+            <span>☀</span>
+
+            <b data-i18n="day">Day</b>
+
+            <small data-i18n="lowRisk">
+              Low risk
+            </small>
+
+            <div class="risk-line">
+              <i></i>
+            </div>
+
+          </div>
+
+
+          <div class="time-card moderate">
+
+            <span>◐</span>
+
+            <b data-i18n="evening">Evening</b>
+
+            <small data-i18n="moderateRisk">
+              Moderate risk
+            </small>
+
+            <div class="risk-line">
+              <i></i>
+            </div>
+
+          </div>
+
+
+          <div class="time-card high">
+
+            <span>☾</span>
+
+            <b data-i18n="night">Night</b>
+
+            <small data-i18n="highRisk">
+              Higher risk
+            </small>
+
+            <div class="risk-line">
+              <i></i>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         HISTORY
+    ====================================================== -->
+
+    <section
+      class="history-section"
+      id="history" data-page="history"
+    >
+
+      <div class="section-topline">
+
+        <div>
+
+          <span
+            class="mini-label"
+            data-i18n="myHistory"
+          >
+            MY HISTORY
+          </span>
+
+          <h2 data-i18n="journeyHistory">
+            Your recent journeys.
+          </h2>
+
+          <p data-i18n="historyDescription">
+            Review your previous routes and safety decisions.
+          </p>
+
+        </div>
+
+        <button
+          class="text-btn"
+          id="clearHistoryBtn"
+        >
+          Clear history
+        </button>
+
+      </div>
+
+
+      <div
+        class="history-list"
+        id="historyList"
+      ></div>
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORT INCIDENT
+    ====================================================== -->
+
+    <section
+      class="community-section"
+      id="report" data-page="report"
+    >
+
+      <div class="community-card glass">
+
+        <div>
+
+          <span
+            class="mini-label"
+            data-i18n="communitySignal"
+          >
+            COMMUNITY SAFETY
+          </span>
+
+          <h2 data-i18n="helpImprove">
+            Help improve the safety picture.
+          </h2>
+
+          <p data-i18n="reportDescription">
+            Report incidents so safety information can become more useful over time.
+          </p>
+
+        </div>
+
+        <button
+          class="secondary-btn"
+          id="reportBtn"
+        >
+          ＋
+          <span data-i18n="reportIncident">
+            Report an incident
+          </span>
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         ABOUT
+    ====================================================== -->
+
+    <section
+      class="about-section"
+      id="about" data-page="about"
+    >
+
+      <div class="section-topline centered">
+
+        <span
+          class="mini-label"
+          data-i18n="aboutSafeRoute"
+        >
+          ABOUT SAFEROUTE
+        </span>
+
+        <h2 data-i18n="moreThanNavigation">
+          More than navigation.
+        </h2>
+
+        <p data-i18n="aboutDescription">
+          SafeRoute is designed to make safety a visible part of everyday route decisions.
+        </p>
+
+      </div>
+
+
+      <div class="about-grid">
+
+        <article class="about-card glass">
+
+          <span>01</span>
+
+          <h3 data-i18n="safetyFirst">
+            Safety-first
+          </h3>
+
+          <p data-i18n="safetyFirstText">
+            Routes are evaluated using safety signals instead of relying only on distance.
+          </p>
+
+        </article>
+
+
+        <article class="about-card glass">
+
+          <span>02</span>
+
+          <h3 data-i18n="explainable">
+            Explainable
+          </h3>
+
+          <p data-i18n="explainableText">
+            Users can see why a route received its score and which factors influenced it.
+          </p>
+
+        </article>
+
+
+        <article class="about-card glass">
+
+          <span>03</span>
+
+          <h3 data-i18n="adaptive">
+            Adaptive
+          </h3>
+
+          <p data-i18n="adaptiveText">
+            Preferences, travel mode and departure time can change the route recommendation.
+          </p>
+
+        </article>
+
+
+        <article class="about-card glass">
+
+          <span>04</span>
+
+          <h3 data-i18n="communityDriven">
+            Community-driven
+          </h3>
+
+          <p data-i18n="communityDrivenText">
+            Verified reports can help create a more useful and continuously updated safety picture.
+          </p>
+
+        </article>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MY ACCOUNT
+    ====================================================== -->
+
+    <section class="account-section" id="account" data-page="account">
+
+      <div class="section-topline centered">
+
+        <span class="mini-label" data-i18n="myAccount">MY ACCOUNT</span>
+
+        <h2 data-i18n="accountTitle">Your SafeRoute account.</h2>
+
+        <p data-i18n="accountDescription">
+          Manage your profile, saved locations and personal safety statistics.
+        </p>
+
+      </div>
+
+      <div class="account-grid">
+
+        <div class="account-profile-card glass">
+
+          <div class="profile-large account-avatar">
+            <span id="accountAvatar">K</span>
+          </div>
+
+          <div class="account-profile-info">
+            <span class="mini-label" data-i18n="profile">PROFILE</span>
+            <h3 id="accountName">SafeRoute User</h3>
+            <p id="accountIdentifier">—</p>
+          </div>
+
+          <button class="secondary-btn" id="accountLogoutBtn">
+            <span data-i18n="logout">Log out</span>
+          </button>
+
+        </div>
+
+        <div class="account-card glass">
+
+          <div class="account-card-head">
+            <div>
+              <span class="mini-label" data-i18n="savedLocations">SAVED LOCATIONS</span>
+              <h3 data-i18n="savedLocationsTitle">Places you use often.</h3>
+            </div>
+          </div>
+
+          <div class="save-location-row">
+            <input id="newLocationInput" placeholder="e.g. Home, College, Metro Station">
+            <button class="primary-btn compact-btn" id="saveLocationBtn">
+              <span data-i18n="save">Save</span><span>+</span>
+            </button>
+          </div>
+
+          <div id="savedLocationsList" class="saved-locations-list"></div>
+
+        </div>
+
+        <div class="account-card glass account-stats-card">
+
+          <div class="account-card-head">
+            <div>
+              <span class="mini-label" data-i18n="yourStatistics">YOUR STATISTICS</span>
+              <h3 data-i18n="statsTitle">Your safety activity.</h3>
+            </div>
+          </div>
+
+          <div class="account-stats-grid">
+            <div class="account-stat">
+              <strong id="statJourneys">0</strong>
+              <span data-i18n="journeysPlanned">Journeys planned</span>
+            </div>
+            <div class="account-stat">
+              <strong id="statAverage">—</strong>
+              <span data-i18n="averageScore">Average safety score</span>
+            </div>
+            <div class="account-stat">
+              <strong id="statReports">0</strong>
+              <span data-i18n="reportsSubmitted">Reports submitted</span>
+            </div>
+            <div class="account-stat">
+              <strong id="statBest">—</strong>
+              <span data-i18n="bestScore">Best route score</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- DATA NOTE -->
+
+    <section class="data-note">
+
+      <div>
+
+        <span
+          class="mini-label"
+          data-i18n="dataTransparency"
+        >
+          DATA TRANSPARENCY
+        </span>
+
+        <h3 data-i18n="safetyDataChanges">
+          Safety data can change.
+        </h3>
+
+        <p data-i18n="dataDescription">
+          Real deployment should use verified/open datasets, timestamps, multiple sources
+          and adjustable weights to handle incomplete, outdated or biased reports.
+        </p>
+
+      </div>
+
+      <div class="data-badges">
+
+        <span>Verified / open sources</span>
+        <span>Timestamped data</span>
+        <span>Adjustable weights</span>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footer-brand">
+
+      <span class="brand-mark small">
+        <span class="brand-shield">◆</span>
+      </span>
+
+      <b>SafeRoute</b>
+
+    </div>
+
+    <p>
+      Women's Safety Route Recommendation System · SIH 2026 Prototype
+    </p>
+
+    <span data-i18n="builtSafer">
+      Built for safer decisions.
+    </span>
+
+  </footer>
+
+</div>
+
+
+<!-- =========================================================
+     LOCATION PERMISSION MODAL
+========================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="locationModal"
+>
+
+  <div class="modal glass">
+
+    <button
+      class="modal-close"
+      id="locationModalClose"
+    >
+      ×
+    </button>
+
+    <span class="mini-label">
+      LOCATION ACCESS
+    </span>
+
+    <div class="modal-large-icon">
+      ⌖
+    </div>
+
+    <h2 data-i18n="locationPermission">
+      Allow SafeRoute to access your location?
+    </h2>
+
+    <p data-i18n="locationPermissionText">
+      Your current location will be used only to set your starting point
+      for route planning.
+    </p>
+
+    <div class="modal-actions">
+
+      <button
+        class="secondary-btn"
+        id="denyLocation"
+        data-i18n="notNow"
+      >
+        Not now
+      </button>
+
+      <button
+        class="primary-btn"
+        id="allowLocation"
+      >
+        <span data-i18n="allowLocation">
+          Allow location
+        </span>
+        <span>→</span>
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     INCIDENT MODAL
+========================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="incidentModal"
+>
+
+  <div class="modal glass">
+
+    <button
+      class="modal-close"
+      id="incidentModalClose"
+    >
+      ×
+    </button>
+
+    <span class="mini-label" data-i18n="safetyReport">
+      SAFETY REPORT
+    </span>
+
+    <h2 data-i18n="reportIncident">
+      Report an incident
+    </h2>
+
+    <p data-i18n="reportModalText">
+      Help improve the safety information around your community.
+    </p>
+
+    <form id="incidentForm">
+
+      <label>
+        <span data-i18n="location">
+          Location
+        </span>
+
+        <input
+          id="incidentLocation"
+          placeholder="e.g. Near Sector 62 Metro"
+          required
+        />
+
+        <small
+          class="field-error"
+          id="incidentLocationError"
+        ></small>
+
+      </label>
+
+
+      <label>
+        <span data-i18n="incidentType">
+          Incident type
+        </span>
+
+        <select id="incidentType">
+
+          <option value="harassment" data-i18n="harassment">
+            Harassment
+          </option>
+
+          <option value="poor-lighting" data-i18n="poorLighting">
+            Poor lighting
+          </option>
+
+          <option value="suspicious" data-i18n="suspiciousActivity">
+            Suspicious activity
+          </option>
+
+          <option value="unsafe" data-i18n="unsafeStretch">
+            Unsafe / isolated stretch
+          </option>
+
+          <option value="other" data-i18n="other">
+            Other
+          </option>
+
+        </select>
+
+      </label>
+
+
+      <label>
+        <span data-i18n="severity">
+          Severity
+        </span>
+
+        <select id="incidentSeverity">
+
+          <option value="low" data-i18n="low">
+            Low
+          </option>
+
+          <option value="moderate" data-i18n="moderate">
+            Moderate
+          </option>
+
+          <option value="high" data-i18n="high">
+            High
+          </option>
+
+          <option value="critical" data-i18n="critical">
+            Critical
+          </option>
+
+        </select>
+
+      </label>
+
+
+      <label>
+        <span data-i18n="description">
+          Description
+        </span>
+
+        <textarea
+          id="incidentDescription"
+          rows="4"
+          placeholder="Describe what happened..."
+          required
+        ></textarea>
+
+      </label>
+
+
+      <button
+        class="primary-btn"
+        type="submit"
+      >
+        <span data-i18n="submitReport">
+          Submit report
+        </span>
+
+        <span>→</span>
+      </button>
+
+    </form>
+
+    <div
+      class="success-message"
+      id="incidentSuccess"
+    >
+      ✓ Report captured successfully.
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     SOS MODAL
+========================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="sosModal"
+>
+
+  <div class="modal glass sos-modal">
+
+    <button
+      class="modal-close"
+      id="sosClose"
+    >
+      ×
+    </button>
+
+    <div class="sos-big">
+      SOS
+    </div>
+
+    <h2 data-i18n="emergencySOS">
+      Emergency SOS
+    </h2>
+
+    <p data-i18n="sosText">
+      This prototype can be connected to emergency contacts,
+      location sharing and emergency services.
+    </p>
+
+    <div class="sos-actions">
+
+      <button
+        class="sos-emergency-btn"
+        id="confirmSOS"
+      >
+        <span data-i18n="activateSOS">
+          Activate SOS
+        </span>
+      </button>
+
+      <button
+        class="secondary-btn"
+        id="cancelSOS"
+        data-i18n="cancel"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     PROFILE MODAL
+========================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="profileModal"
+>
+
+  <div class="modal glass">
+
+    <button
+      class="modal-close"
+      id="profileClose"
+    >
+      ×
+    </button>
+
+    <span class="mini-label" data-i18n="myAccount">
+      MY ACCOUNT
+    </span>
+
+    <div class="profile-large">
+      <span id="profileModalAvatar">K</span>
+    </div>
+
+    <h2 id="profileName">
+      SafeRoute User
+    </h2>
+
+    <p id="profileIdentifier">
+      —
+    </p>
+
+    <div class="profile-actions">
+
+      <button
+        class="secondary-btn"
+        id="logoutBtn"
+        data-i18n="logout"
+      >
+        Log out
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     WEIGHTS MODAL
+========================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="weightsModal"
+>
+
+  <div class="modal glass">
+
+    <button
+      class="modal-close"
+      id="weightsClose"
+    >
+      ×
+    </button>
+
+    <span class="mini-label">
+      SAFETY WEIGHTS
+    </span>
+
+    <h2>
+      Adjust route priorities
+    </h2>
+
+    <p>
+      Values must add up to 100.
+    </p>
+
+    <div class="weight-inputs">
+
+      <label>
+        Lighting
+        <input type="number" id="weightLighting" min="0" max="100">
+      </label>
+
+      <label>
+        Crowd
+        <input type="number" id="weightCrowd" min="0" max="100">
+      </label>
+
+      <label>
+        Incidents
+        <input type="number" id="weightIncidents" min="0" max="100">
+      </label>
+
+      <label>
+        Emergency
+        <input type="number" id="weightEmergency" min="0" max="100">
+      </label>
+
+    </div>
+
+    <button
+      class="primary-btn"
+      id="saveWeights"
+    >
+      <span>Save weights</span>
+      <span>→</span>
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+  class="toast"
+  id="toast"
+></div>
+
+
+<script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="live_map_route.js"></script>
+
+</body>
+</html>
